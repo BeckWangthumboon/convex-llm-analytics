@@ -1,4 +1,82 @@
-import { defineSchema } from "convex/server";
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
 
-// Add tables here once the analytics data model is ready.
-export default defineSchema({});
+const status = v.union(v.literal("success"), v.literal("error"));
+
+const finishReason = v.union(
+  v.literal("stop"),
+  v.literal("length"),
+  v.literal("content-filter"),
+  v.literal("tool-calls"),
+  v.literal("error"),
+  v.literal("other"),
+);
+
+const rollupFields = {
+  bucketStart: v.number(),
+  identifier: v.string(),
+  provider: v.string(),
+  model: v.string(),
+
+  requestCount: v.number(),
+  successCount: v.number(),
+  errorCount: v.number(),
+
+  promptTokens: v.number(),
+  completionTokens: v.number(),
+  totalTokens: v.number(),
+  reasoningTokens: v.number(),
+  cachedInputTokens: v.number(),
+
+  totalLatencyMs: v.number(),
+  latencySampleCount: v.number(),
+  totalCostMicrosUsd: v.number(),
+};
+
+export default defineSchema({
+  usage_events: defineTable({
+    eventId: v.string(),
+    timestamp: v.number(),
+
+    identifier: v.string(),
+    provider: v.string(),
+    model: v.string(),
+
+    status,
+    finishReason: v.optional(finishReason),
+
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    reasoningTokens: v.optional(v.number()),
+    cachedInputTokens: v.optional(v.number()),
+
+    latencyMs: v.optional(v.number()),
+    costMicrosUsd: v.optional(v.number()),
+
+    providerResponseId: v.optional(v.string()),
+  })
+    .index("by_event_id", ["eventId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_identifier_timestamp", ["identifier", "timestamp"]),
+
+  usage_rollups_hourly: defineTable(rollupFields)
+    .index("by_bucket_start", ["bucketStart"])
+    .index("by_identifier_bucket", ["identifier", "bucketStart"])
+    .index("by_bucket_identifier_provider_model", [
+      "bucketStart",
+      "identifier",
+      "provider",
+      "model",
+    ]),
+
+  usage_rollups_daily: defineTable(rollupFields)
+    .index("by_bucket_start", ["bucketStart"])
+    .index("by_identifier_bucket", ["identifier", "bucketStart"])
+    .index("by_bucket_identifier_provider_model", [
+      "bucketStart",
+      "identifier",
+      "provider",
+      "model",
+    ]),
+});

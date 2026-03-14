@@ -13,3 +13,7 @@ node_modules
 # npm pack output
 *.tgz
 *.tsbuildinfo
+
+/convex/
+/plan.md
+/spec.md

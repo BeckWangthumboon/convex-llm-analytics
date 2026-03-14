@@ -14,7 +14,9 @@
   ],
   "type": "module",
   "scripts": {
-    "codegen": "convex codegen --component-dir ./src/component",
+    "generate": "mkdir -p convex && convex codegen --component-dir ./src/component",
+    "codegen": "mkdir -p convex && convex codegen --component-dir ./src/component",
+    "typecheck": "tsc --noEmit --project ./tsconfig.typecheck.json",
     "build": "tsc --project ./tsconfig.build.json"
   },
   "files": [
