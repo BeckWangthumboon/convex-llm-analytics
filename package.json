@@ -1,0 +1,54 @@
+{
+  "name": "convex-llm-analytics",
+  "description": "A Convex component scaffold for LLM analytics.",
+  "repository": "github:beckthemaster/convex-llm-analytics",
+  "homepage": "https://github.com/beckthemaster/convex-llm-analytics#readme",
+  "bugs": {
+    "url": "https://github.com/beckthemaster/convex-llm-analytics/issues"
+  },
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "keywords": [
+    "convex",
+    "component"
+  ],
+  "type": "module",
+  "scripts": {
+    "codegen": "convex codegen --component-dir ./src/component",
+    "build": "tsc --project ./tsconfig.build.json"
+  },
+  "files": [
+    "dist",
+    "src/component"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./_generated/component.js": {
+      "types": "./dist/component/_generated/component.d.ts"
+    },
+    "./_generated/component": {
+      "types": "./dist/component/_generated/component.d.ts"
+    },
+    "./convex.config.js": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    },
+    "./convex.config": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    }
+  },
+  "peerDependencies": {
+    "convex": "^1.33.0"
+  },
+  "devDependencies": {
+    "convex": "1.33.0",
+    "typescript": "5.9.3"
+  },
+  "types": "./dist/client/index.d.ts",
+  "module": "./dist/client/index.js"
+}
