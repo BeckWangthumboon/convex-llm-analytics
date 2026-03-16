@@ -2,7 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "target": "ESNext",
-    "lib": ["ES2023"],
+    "lib": ["ES2023", "WebWorker"],
     "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true,
     "module": "ESNext",

@@ -22,4 +22,37 @@ import type { FunctionReference } from "convex/server";
  * ```
  */
 export type ComponentApi<Name extends string | undefined = string | undefined> =
-  {};
+  {
+    usage: {
+      recordUsage: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cachedInputTokens?: number;
+          completionTokens?: number;
+          costMicrosUsd?: number;
+          eventId?: string;
+          finishReason?:
+            | "stop"
+            | "length"
+            | "content-filter"
+            | "tool-calls"
+            | "error"
+            | "other";
+          identifier: string;
+          latencyMs?: number;
+          model: string;
+          promptTokens?: number;
+          provider: string;
+          providerResponseId?: string;
+          reasoningTokens?: number;
+          status: "success" | "error";
+          timestamp: number;
+          totalTokens?: number;
+        },
+        | { eventId: string; kind: "inserted" }
+        | { eventId: string; kind: "duplicate" },
+        Name
+      >;
+    };
+  };

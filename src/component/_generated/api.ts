@@ -8,6 +8,10 @@
  * @module
  */
 
+import type * as lib_buckets from "../lib/buckets.js";
+import type * as lib_normalize from "../lib/normalize.js";
+import type * as usage from "../usage.js";
+
 import type {
   ApiFromModules,
   FilterApi,
@@ -15,7 +19,11 @@ import type {
 } from "convex/server";
 import { anyApi, componentsGeneric } from "convex/server";
 
-const fullApi: ApiFromModules<{}> = anyApi as any;
+const fullApi: ApiFromModules<{
+  "lib/buckets": typeof lib_buckets;
+  "lib/normalize": typeof lib_normalize;
+  usage: typeof usage;
+}> = anyApi as any;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
