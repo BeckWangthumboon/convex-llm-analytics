@@ -22,8 +22,8 @@ const aggregateFields = {
   successCount: v.number(),
   errorCount: v.number(),
 
-  promptTokens: v.number(),
-  completionTokens: v.number(),
+  inputTokens: v.number(),
+  outputTokens: v.number(),
   totalTokens: v.number(),
   reasoningTokens: v.number(),
   cachedInputTokens: v.number(),
@@ -45,8 +45,8 @@ export default defineSchema({
     status,
     finishReason: v.optional(finishReason),
 
-    promptTokens: v.optional(v.number()),
-    completionTokens: v.optional(v.number()),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
     totalTokens: v.optional(v.number()),
     reasoningTokens: v.optional(v.number()),
     cachedInputTokens: v.optional(v.number()),
@@ -79,4 +79,12 @@ export default defineSchema({
       "provider",
       "model",
     ]),
+
+  model_pricing: defineTable({
+    provider: v.string(),
+    model: v.string(),
+    inputCostMicrosPer1M: v.number(),
+    outputCostMicrosPer1M: v.number(),
+    cachedInputCostMicrosPer1M: v.optional(v.number()),
+  }).index("by_provider_model", ["provider", "model"]),
 });

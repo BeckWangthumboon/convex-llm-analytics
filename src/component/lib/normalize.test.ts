@@ -18,8 +18,8 @@ describe("normalizeUsageEvent", () => {
   it("generates an eventId and derives totalTokens when omitted", () => {
     const normalized = normalizeUsageEvent({
       ...baseEvent,
-      promptTokens: 7,
-      completionTokens: 5,
+      inputTokens: 7,
+      outputTokens: 5,
     });
 
     expect(normalized.eventId).toMatch(
@@ -32,8 +32,8 @@ describe("normalizeUsageEvent", () => {
     const normalized = normalizeUsageEvent({
       ...baseEvent,
       eventId: "evt-123",
-      promptTokens: 7,
-      completionTokens: 5,
+      inputTokens: 7,
+      outputTokens: 5,
       totalTokens: 99,
     });
 
@@ -45,14 +45,14 @@ describe("normalizeUsageEvent", () => {
     expect(
       normalizeUsageEvent({
         ...baseEvent,
-        promptTokens: 7,
+        inputTokens: 7,
       }).totalTokens,
     ).toBeUndefined();
 
     expect(
       normalizeUsageEvent({
         ...baseEvent,
-        completionTokens: 5,
+        outputTokens: 5,
       }).totalTokens,
     ).toBeUndefined();
   });
@@ -71,8 +71,8 @@ describe("normalizeUsageEvent", () => {
     ["timestamp", -1],
     ["timestamp", 1.5],
     ["timestamp", Number.MAX_SAFE_INTEGER + 1],
-    ["promptTokens", -1],
-    ["completionTokens", 2.5],
+    ["inputTokens", -1],
+    ["outputTokens", 2.5],
     ["totalTokens", Number.MAX_SAFE_INTEGER + 1],
     ["reasoningTokens", -1],
     ["cachedInputTokens", 0.25],
@@ -123,8 +123,8 @@ describe("toAggregateIncrement", () => {
       requestCount: 1,
       successCount: 1,
       errorCount: 0,
-      promptTokens: 0,
-      completionTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
       totalTokens: 0,
       reasoningTokens: 0,
       cachedInputTokens: 0,
@@ -139,8 +139,8 @@ describe("toAggregateIncrement", () => {
       normalizeUsageEvent({
         ...baseEvent,
         status: "error",
-        promptTokens: 8,
-        completionTokens: 3,
+        inputTokens: 8,
+        outputTokens: 3,
         reasoningTokens: 2,
         cachedInputTokens: 1,
         latencyMs: 42.5,
@@ -152,8 +152,8 @@ describe("toAggregateIncrement", () => {
       requestCount: 1,
       successCount: 0,
       errorCount: 1,
-      promptTokens: 8,
-      completionTokens: 3,
+      inputTokens: 8,
+      outputTokens: 3,
       totalTokens: 11,
       reasoningTokens: 2,
       cachedInputTokens: 1,

@@ -23,13 +23,79 @@ import type { FunctionReference } from "convex/server";
  */
 export type ComponentApi<Name extends string | undefined = string | undefined> =
   {
+    pricing: {
+      deleteModelPricing: FunctionReference<
+        "mutation",
+        "internal",
+        { model: string; provider: string },
+        { deleted: boolean },
+        Name
+      >;
+      getModelPricing: FunctionReference<
+        "query",
+        "internal",
+        { model: string; provider: string },
+        {
+          cachedInputCostMicrosPer1M?: number;
+          inputCostMicrosPer1M: number;
+          model: string;
+          outputCostMicrosPer1M: number;
+          provider: string;
+        } | null,
+        Name
+      >;
+      listModelPricings: FunctionReference<
+        "query",
+        "internal",
+        {},
+        Array<{
+          cachedInputCostMicrosPer1M?: number;
+          inputCostMicrosPer1M: number;
+          model: string;
+          outputCostMicrosPer1M: number;
+          provider: string;
+        }>,
+        Name
+      >;
+      upsertModelPricing: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cachedInputCostMicrosPer1M?: number;
+          inputCostMicrosPer1M: number;
+          model: string;
+          outputCostMicrosPer1M: number;
+          provider: string;
+        },
+        | {
+            kind: "created";
+            pricing: {
+              cachedInputCostMicrosPer1M?: number;
+              inputCostMicrosPer1M: number;
+              model: string;
+              outputCostMicrosPer1M: number;
+              provider: string;
+            };
+          }
+        | {
+            kind: "updated";
+            pricing: {
+              cachedInputCostMicrosPer1M?: number;
+              inputCostMicrosPer1M: number;
+              model: string;
+              outputCostMicrosPer1M: number;
+              provider: string;
+            };
+          },
+        Name
+      >;
+    };
     usage: {
       recordUsage: FunctionReference<
         "mutation",
         "internal",
         {
           cachedInputTokens?: number;
-          completionTokens?: number;
           costMicrosUsd?: number;
           eventId?: string;
           finishReason?:
@@ -40,9 +106,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "error"
             | "other";
           identifier: string;
+          inputTokens?: number;
           latencyMs?: number;
           model: string;
-          promptTokens?: number;
+          outputTokens?: number;
           provider: string;
           providerResponseId?: string;
           reasoningTokens?: number;

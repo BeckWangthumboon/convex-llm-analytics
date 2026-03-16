@@ -16,8 +16,8 @@ export type UsageEventInput = {
   model: string;
   status: UsageStatus;
   finishReason?: UsageFinishReason;
-  promptTokens?: number;
-  completionTokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   totalTokens?: number;
   reasoningTokens?: number;
   cachedInputTokens?: number;
@@ -35,8 +35,8 @@ export type AggregateIncrement = {
   requestCount: number;
   successCount: number;
   errorCount: number;
-  promptTokens: number;
-  completionTokens: number;
+  inputTokens: number;
+  outputTokens: number;
   totalTokens: number;
   reasoningTokens: number;
   cachedInputTokens: number;
@@ -47,8 +47,8 @@ export type AggregateIncrement = {
 
 const INTEGER_FIELDS = [
   "timestamp",
-  "promptTokens",
-  "completionTokens",
+  "inputTokens",
+  "outputTokens",
   "totalTokens",
   "reasoningTokens",
   "cachedInputTokens",
@@ -90,8 +90,8 @@ export function normalizeUsageEvent(
 
   const totalTokens =
     event.totalTokens ??
-    (event.promptTokens !== undefined && event.completionTokens !== undefined
-      ? event.promptTokens + event.completionTokens
+    (event.inputTokens !== undefined && event.outputTokens !== undefined
+      ? event.inputTokens + event.outputTokens
       : undefined);
 
   return {
@@ -108,8 +108,8 @@ export function toAggregateIncrement(
     requestCount: 1,
     successCount: event.status === "success" ? 1 : 0,
     errorCount: event.status === "error" ? 1 : 0,
-    promptTokens: event.promptTokens ?? 0,
-    completionTokens: event.completionTokens ?? 0,
+    inputTokens: event.inputTokens ?? 0,
+    outputTokens: event.outputTokens ?? 0,
     totalTokens: event.totalTokens ?? 0,
     reasoningTokens: event.reasoningTokens ?? 0,
     cachedInputTokens: event.cachedInputTokens ?? 0,

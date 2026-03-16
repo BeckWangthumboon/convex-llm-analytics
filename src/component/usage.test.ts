@@ -32,8 +32,8 @@ describe("recordUsage", () => {
       t.mutation(api.usage.recordUsage, {
         ...baseArgs,
         eventId: "evt-inserted",
-        promptTokens: 7,
-        completionTokens: 5,
+        inputTokens: 7,
+        outputTokens: 5,
         reasoningTokens: 2,
         cachedInputTokens: 1,
         latencyMs: 42.5,
@@ -52,8 +52,8 @@ describe("recordUsage", () => {
     expect(events[0]).toMatchObject({
       eventId: "evt-inserted",
       totalTokens: 12,
-      promptTokens: 7,
-      completionTokens: 5,
+      inputTokens: 7,
+      outputTokens: 5,
       reasoningTokens: 2,
       cachedInputTokens: 1,
       latencyMs: 42.5,
@@ -69,8 +69,8 @@ describe("recordUsage", () => {
         requestCount: 1,
         successCount: 1,
         errorCount: 0,
-        promptTokens: 7,
-        completionTokens: 5,
+        inputTokens: 7,
+        outputTokens: 5,
         totalTokens: 12,
         reasoningTokens: 2,
         cachedInputTokens: 1,
@@ -110,16 +110,16 @@ describe("recordUsage", () => {
     await t.mutation(api.usage.recordUsage, {
       ...baseArgs,
       eventId: "evt-duplicate",
-      promptTokens: 2,
-      completionTokens: 3,
+      inputTokens: 2,
+      outputTokens: 3,
     });
 
     await expect(
       t.mutation(api.usage.recordUsage, {
         ...baseArgs,
         eventId: "evt-duplicate",
-        promptTokens: 100,
-        completionTokens: 200,
+        inputTokens: 100,
+        outputTokens: 200,
       }),
     ).resolves.toEqual({
       kind: "duplicate",
@@ -135,8 +135,8 @@ describe("recordUsage", () => {
     expect(daily).toHaveLength(1);
     expect(hourly[0]).toMatchObject({
       requestCount: 1,
-      promptTokens: 2,
-      completionTokens: 3,
+      inputTokens: 2,
+      outputTokens: 3,
       totalTokens: 5,
     });
     expect(daily[0]).toMatchObject({
@@ -178,8 +178,8 @@ describe("recordUsage", () => {
     const hourly = await readTable(t, "usage_aggregates_hourly");
 
     expect(hourly[0]).toMatchObject({
-      promptTokens: 0,
-      completionTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
       totalTokens: 0,
       reasoningTokens: 0,
       cachedInputTokens: 0,
@@ -195,8 +195,8 @@ describe("recordUsage", () => {
     await t.mutation(api.usage.recordUsage, {
       ...baseArgs,
       eventId: "evt-total-override",
-      promptTokens: 7,
-      completionTokens: 5,
+      inputTokens: 7,
+      outputTokens: 5,
       totalTokens: 50,
     });
 
