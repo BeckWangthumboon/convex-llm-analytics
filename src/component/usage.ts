@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { mutation, type MutationCtx } from "./_generated/server.js";
 import { getDayBucketStart, getHourBucketStart } from "./lib/buckets.js";
-import { normalizeUsageEvent, toRollupIncrement } from "./lib/normalize.js";
+import { normalizeUsageEvent, toAggregateIncrement } from "./lib/normalize.js";
 
 const statusValidator = v.union(v.literal("success"), v.literal("error"));
 
@@ -63,11 +63,11 @@ export const recordUsage = mutation({
     }
 
     const event = normalizeUsageEvent(args);
-    const increment = toRollupIncrement(event);
+    const increment = toAggregateIncrement(event);
 
     await ctx.db.insert("usage_events", event);
 
-    await upsertRollup(ctx, "usage_rollups_hourly", {
+    await upsertAggregate(ctx, "usage_aggregates_hourly", {
       bucketStart: getHourBucketStart(event.timestamp),
       identifier: event.identifier,
       provider: event.provider,
@@ -75,7 +75,7 @@ export const recordUsage = mutation({
       increment,
     });
 
-    await upsertRollup(ctx, "usage_rollups_daily", {
+    await upsertAggregate(ctx, "usage_aggregates_daily", {
       bucketStart: getDayBucketStart(event.timestamp),
       identifier: event.identifier,
       provider: event.provider,
@@ -90,20 +90,22 @@ export const recordUsage = mutation({
   },
 });
 
-type RollupTableName = "usage_rollups_hourly" | "usage_rollups_daily";
+type AggregateTableName =
+  | "usage_aggregates_hourly"
+  | "usage_aggregates_daily";
 
-type UpsertRollupArgs = {
+type UpsertAggregateArgs = {
   bucketStart: number;
   identifier: string;
   provider: string;
   model: string;
-  increment: ReturnType<typeof toRollupIncrement>;
+  increment: ReturnType<typeof toAggregateIncrement>;
 };
 
-async function upsertRollup(
+async function upsertAggregate(
   ctx: MutationCtx,
-  table: RollupTableName,
-  args: UpsertRollupArgs,
+  table: AggregateTableName,
+  args: UpsertAggregateArgs,
 ) {
   const existing = await ctx.db
     .query(table)
@@ -127,15 +129,15 @@ async function upsertRollup(
     return;
   }
 
-  await patchRollup(ctx, table, existing._id, existing, args.increment);
+  await patchAggregate(ctx, table, existing._id, existing, args.increment);
 }
 
-async function patchRollup(
+async function patchAggregate(
   ctx: MutationCtx,
-  table: RollupTableName,
-  id: Id<RollupTableName>,
-  existing: Doc<RollupTableName>,
-  increment: ReturnType<typeof toRollupIncrement>,
+  table: AggregateTableName,
+  id: Id<AggregateTableName>,
+  existing: Doc<AggregateTableName>,
+  increment: ReturnType<typeof toAggregateIncrement>,
 ) {
   await ctx.db.patch(id, {
     requestCount: existing.requestCount + increment.requestCount,

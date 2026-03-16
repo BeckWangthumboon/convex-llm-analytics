@@ -12,7 +12,7 @@ const finishReason = v.union(
   v.literal("other"),
 );
 
-const rollupFields = {
+const aggregateFields = {
   bucketStart: v.number(),
   identifier: v.string(),
   provider: v.string(),
@@ -60,7 +60,7 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_identifier_timestamp", ["identifier", "timestamp"]),
 
-  usage_rollups_hourly: defineTable(rollupFields)
+  usage_aggregates_hourly: defineTable(aggregateFields)
     .index("by_bucket_start", ["bucketStart"])
     .index("by_identifier_bucket", ["identifier", "bucketStart"])
     .index("by_bucket_identifier_provider_model", [
@@ -70,7 +70,7 @@ export default defineSchema({
       "model",
     ]),
 
-  usage_rollups_daily: defineTable(rollupFields)
+  usage_aggregates_daily: defineTable(aggregateFields)
     .index("by_bucket_start", ["bucketStart"])
     .index("by_identifier_bucket", ["identifier", "bucketStart"])
     .index("by_bucket_identifier_provider_model", [

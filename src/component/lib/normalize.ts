@@ -31,7 +31,7 @@ export type NormalizedUsageEvent = Omit<UsageEventInput, "eventId"> & {
   totalTokens?: number;
 };
 
-export type RollupIncrement = {
+export type AggregateIncrement = {
   requestCount: number;
   successCount: number;
   errorCount: number;
@@ -101,7 +101,9 @@ export function normalizeUsageEvent(
   };
 }
 
-export function toRollupIncrement(event: NormalizedUsageEvent): RollupIncrement {
+export function toAggregateIncrement(
+  event: NormalizedUsageEvent,
+): AggregateIncrement {
   return {
     requestCount: 1,
     successCount: event.status === "success" ? 1 : 0,
