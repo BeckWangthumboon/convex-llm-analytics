@@ -16,6 +16,8 @@
   "scripts": {
     "generate": "mkdir -p convex && convex codegen --component-dir ./src/component",
     "codegen": "mkdir -p convex && convex codegen --component-dir ./src/component",
+    "test": "vitest run",
+    "test:once": "vitest run",
     "typecheck": "tsc --noEmit --project ./tsconfig.typecheck.json",
     "build": "tsc --project ./tsconfig.build.json"
   },
@@ -48,8 +50,11 @@
     "convex": "^1.33.0"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "convex": "1.33.0",
-    "typescript": "5.9.3"
+    "convex-test": "^0.0.41",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.0"
   },
   "types": "./dist/client/index.d.ts",
   "module": "./dist/client/index.js"
