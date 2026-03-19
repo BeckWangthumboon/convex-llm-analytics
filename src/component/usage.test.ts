@@ -20,8 +20,10 @@ type TableName =
   | "usage_aggregates_hourly"
   | "usage_aggregates_daily";
 
+const TEST_TABLE_READ_LIMIT = 1_000;
+
 async function readTable(t: ReturnType<typeof initConvexTest>, table: TableName) {
-  return t.run(async (ctx) => await ctx.db.query(table).collect());
+  return t.run(async (ctx) => await ctx.db.query(table).take(TEST_TABLE_READ_LIMIT));
 }
 
 describe("recordUsage", () => {

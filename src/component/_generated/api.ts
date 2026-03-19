@@ -12,6 +12,7 @@ import type * as lib_buckets from "../lib/buckets.js";
 import type * as lib_normalize from "../lib/normalize.js";
 import type * as lib_pricing from "../lib/pricing.js";
 import type * as pricing from "../pricing.js";
+import type * as summary from "../summary.js";
 import type * as usage from "../usage.js";
 
 import type {
@@ -26,6 +27,7 @@ const fullApi: ApiFromModules<{
   "lib/normalize": typeof lib_normalize;
   "lib/pricing": typeof lib_pricing;
   pricing: typeof pricing;
+  summary: typeof summary;
   usage: typeof usage;
 }> = anyApi as any;
 

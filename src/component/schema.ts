@@ -63,6 +63,8 @@ export default defineSchema({
   usage_aggregates_hourly: defineTable(aggregateFields)
     .index("by_bucket_start", ["bucketStart"])
     .index("by_identifier_bucket", ["identifier", "bucketStart"])
+    .index("by_model_bucket", ["model", "bucketStart"])
+    .index("by_identifier_model_bucket", ["identifier", "model", "bucketStart"])
     .index("by_bucket_identifier_provider_model", [
       "bucketStart",
       "identifier",
@@ -73,6 +75,8 @@ export default defineSchema({
   usage_aggregates_daily: defineTable(aggregateFields)
     .index("by_bucket_start", ["bucketStart"])
     .index("by_identifier_bucket", ["identifier", "bucketStart"])
+    .index("by_model_bucket", ["model", "bucketStart"])
+    .index("by_identifier_model_bucket", ["identifier", "model", "bucketStart"])
     .index("by_bucket_identifier_provider_model", [
       "bucketStart",
       "identifier",

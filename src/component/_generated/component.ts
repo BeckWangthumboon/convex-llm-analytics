@@ -90,6 +90,78 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    summary: {
+      getSummary: FunctionReference<
+        "query",
+        "internal",
+        {
+          bucket: "hour" | "day";
+          end: number;
+          identifier?: string;
+          start: number;
+        },
+        {
+          averageLatencyMs: number | null;
+          cachedInputTokens: number;
+          errors: number;
+          inputTokens: number;
+          outputTokens: number;
+          reasoningTokens: number;
+          requests: number;
+          totalCostMicrosUsd: number;
+          totalTokens: number;
+        },
+        Name
+      >;
+      getTimeseries: FunctionReference<
+        "query",
+        "internal",
+        {
+          bucket: "hour" | "day";
+          end: number;
+          identifier?: string;
+          model?: string;
+          start: number;
+        },
+        Array<{
+          averageLatencyMs: number | null;
+          bucketStart: number;
+          cachedInputTokens: number;
+          errors: number;
+          inputTokens: number;
+          outputTokens: number;
+          reasoningTokens: number;
+          requests: number;
+          totalCostMicrosUsd: number;
+          totalTokens: number;
+        }>,
+        Name
+      >;
+      getTopModels: FunctionReference<
+        "query",
+        "internal",
+        {
+          bucket: "hour" | "day";
+          end: number;
+          identifier?: string;
+          start: number;
+        },
+        Array<{
+          averageLatencyMs: number | null;
+          cachedInputTokens: number;
+          errors: number;
+          inputTokens: number;
+          model: string;
+          outputTokens: number;
+          provider: string;
+          reasoningTokens: number;
+          requests: number;
+          totalCostMicrosUsd: number;
+          totalTokens: number;
+        }>,
+        Name
+      >;
+    };
     usage: {
       recordUsage: FunctionReference<
         "mutation",
