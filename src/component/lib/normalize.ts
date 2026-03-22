@@ -42,7 +42,6 @@ export type AggregateIncrement = {
   cachedInputTokens: number;
   totalLatencyMs: number;
   latencySampleCount: number;
-  totalCostMicrosUsd: number;
 };
 
 const INTEGER_FIELDS = [
@@ -115,7 +114,6 @@ export function toAggregateIncrement(
     cachedInputTokens: event.cachedInputTokens ?? 0,
     totalLatencyMs: event.latencyMs ?? 0,
     latencySampleCount: event.latencyMs !== undefined ? 1 : 0,
-    totalCostMicrosUsd: event.costMicrosUsd ?? 0,
   };
 }
 

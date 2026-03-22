@@ -30,7 +30,6 @@ const aggregateFields = {
 
   totalLatencyMs: v.number(),
   latencySampleCount: v.number(),
-  totalCostMicrosUsd: v.number(),
 };
 
 export default defineSchema({

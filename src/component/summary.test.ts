@@ -8,6 +8,34 @@ const baseTimestamp = 1_710_000_000_000;
 const dayStart = getDayBucketStart(baseTimestamp);
 const hourStart = dayStart + 5 * HOUR_MS;
 
+async function seedModelPricing(
+  t: ReturnType<typeof initConvexTest>,
+  cachedOpenAiPrice: number | undefined = 50_000,
+) {
+  await t.mutation(api.pricing.upsertModelPricing, {
+    provider: "openai",
+    model: "shared-model",
+    inputCostMicrosPer1M: 100_000,
+    outputCostMicrosPer1M: 200_000,
+    ...(cachedOpenAiPrice === undefined
+      ? {}
+      : { cachedInputCostMicrosPer1M: cachedOpenAiPrice }),
+  });
+  await t.mutation(api.pricing.upsertModelPricing, {
+    provider: "openai",
+    model: "other-model",
+    inputCostMicrosPer1M: 500_000,
+    outputCostMicrosPer1M: 300_000,
+  });
+  await t.mutation(api.pricing.upsertModelPricing, {
+    provider: "anthropic",
+    model: "shared-model",
+    inputCostMicrosPer1M: 250_000,
+    outputCostMicrosPer1M: 400_000,
+    cachedInputCostMicrosPer1M: 100_000,
+  });
+}
+
 async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
   await t.mutation(api.usage.recordUsage, {
     eventId: "evt-openai-shared-a",
@@ -21,7 +49,7 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     reasoningTokens: 2,
     cachedInputTokens: 1,
     latencyMs: 100,
-    costMicrosUsd: 50,
+    costMicrosUsd: 5_000,
   });
 
   await t.mutation(api.usage.recordUsage, {
@@ -34,7 +62,7 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     inputTokens: 3,
     outputTokens: 2,
     latencyMs: 300,
-    costMicrosUsd: 25,
+    costMicrosUsd: 4_000,
   });
 
   await t.mutation(api.usage.recordUsage, {
@@ -48,7 +76,7 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     outputTokens: 6,
     totalTokens: 20,
     cachedInputTokens: 2,
-    costMicrosUsd: 75,
+    costMicrosUsd: 7_000,
   });
 
   await t.mutation(api.usage.recordUsage, {
@@ -61,7 +89,7 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     inputTokens: 8,
     outputTokens: 7,
     latencyMs: 50,
-    costMicrosUsd: 40,
+    costMicrosUsd: 6_000,
   });
 
   await t.mutation(api.usage.recordUsage, {
@@ -74,7 +102,7 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     inputTokens: 9,
     outputTokens: 1,
     latencyMs: 500,
-    costMicrosUsd: 60,
+    costMicrosUsd: 8_000,
   });
 
   await t.mutation(api.usage.recordUsage, {
@@ -87,13 +115,14 @@ async function seedReadQueryFixtures(t: ReturnType<typeof initConvexTest>) {
     inputTokens: 11,
     outputTokens: 9,
     latencyMs: 200,
-    costMicrosUsd: 80,
+    costMicrosUsd: 9_000,
   });
 }
 
 describe("summary queries", () => {
-  it("returns summary totals for a bucket-aligned range", async () => {
+  it("returns summary totals with cost derived from aggregate tokens and pricing", async () => {
     const t = initConvexTest();
+    await seedModelPricing(t);
     await seedReadQueryFixtures(t);
 
     await expect(
@@ -112,12 +141,13 @@ describe("summary queries", () => {
       reasoningTokens: 2,
       cachedInputTokens: 3,
       averageLatencyMs: 150,
-      totalCostMicrosUsd: 190,
+      totalCostMicrosUsd: 12,
     });
   });
 
   it("returns zeroed summary metrics when no aggregate rows match", async () => {
     const t = initConvexTest();
+    await seedModelPricing(t);
     await seedReadQueryFixtures(t);
 
     await expect(
@@ -141,6 +171,7 @@ describe("summary queries", () => {
 
   it("returns zero-filled timeseries buckets and supports model filtering", async () => {
     const t = initConvexTest();
+    await seedModelPricing(t);
     await seedReadQueryFixtures(t);
 
     await expect(
@@ -162,7 +193,7 @@ describe("summary queries", () => {
         reasoningTokens: 2,
         cachedInputTokens: 1,
         averageLatencyMs: 200,
-        totalCostMicrosUsd: 75,
+        totalCostMicrosUsd: 3,
       },
       {
         bucketStart: hourStart + HOUR_MS,
@@ -174,7 +205,7 @@ describe("summary queries", () => {
         reasoningTokens: 0,
         cachedInputTokens: 2,
         averageLatencyMs: null,
-        totalCostMicrosUsd: 75,
+        totalCostMicrosUsd: 3,
       },
       {
         bucketStart: hourStart + 2 * HOUR_MS,
@@ -205,6 +236,7 @@ describe("summary queries", () => {
 
   it("supports model-filtered timeseries queries without an identifier", async () => {
     const t = initConvexTest();
+    await seedModelPricing(t);
     await seedReadQueryFixtures(t);
 
     await expect(
@@ -225,7 +257,7 @@ describe("summary queries", () => {
         reasoningTokens: 2,
         cachedInputTokens: 1,
         averageLatencyMs: 200,
-        totalCostMicrosUsd: 75,
+        totalCostMicrosUsd: 3,
       },
       {
         bucketStart: hourStart + HOUR_MS,
@@ -237,7 +269,7 @@ describe("summary queries", () => {
         reasoningTokens: 0,
         cachedInputTokens: 2,
         averageLatencyMs: 500,
-        totalCostMicrosUsd: 135,
+        totalCostMicrosUsd: 4,
       },
       {
         bucketStart: hourStart + 2 * HOUR_MS,
@@ -268,6 +300,7 @@ describe("summary queries", () => {
 
   it("aggregates top models by provider and model and sorts by request count", async () => {
     const t = initConvexTest();
+    await seedModelPricing(t);
     await seedReadQueryFixtures(t);
 
     await expect(
@@ -289,7 +322,7 @@ describe("summary queries", () => {
         reasoningTokens: 2,
         cachedInputTokens: 1,
         averageLatencyMs: 200,
-        totalCostMicrosUsd: 75,
+        totalCostMicrosUsd: 3,
       },
       {
         provider: "anthropic",
@@ -302,7 +335,7 @@ describe("summary queries", () => {
         reasoningTokens: 0,
         cachedInputTokens: 2,
         averageLatencyMs: null,
-        totalCostMicrosUsd: 75,
+        totalCostMicrosUsd: 3,
       },
       {
         provider: "openai",
@@ -315,9 +348,80 @@ describe("summary queries", () => {
         reasoningTokens: 0,
         cachedInputTokens: 0,
         averageLatencyMs: 50,
-        totalCostMicrosUsd: 40,
+        totalCostMicrosUsd: 6,
       },
     ]);
+  });
+
+  it("returns zero derived cost when pricing is missing", async () => {
+    const t = initConvexTest();
+    await seedReadQueryFixtures(t);
+
+    await expect(
+      t.query(api.summary.getSummary, {
+        start: hourStart,
+        end: hourStart + 3 * HOUR_MS,
+        bucket: "hour",
+        identifier: "assistant",
+      }),
+    ).resolves.toMatchObject({
+      requests: 4,
+      totalCostMicrosUsd: 0,
+    });
+  });
+
+  it("zeros only the cached-input contribution when cached pricing is absent", async () => {
+    const t = initConvexTest();
+    await seedModelPricing(t, undefined as never);
+    await seedReadQueryFixtures(t);
+
+    await expect(
+      t.query(api.summary.getSummary, {
+        start: hourStart,
+        end: hourStart + 3 * HOUR_MS,
+        bucket: "hour",
+        identifier: "assistant",
+      }),
+    ).resolves.toMatchObject({
+      requests: 4,
+      totalCostMicrosUsd: 12,
+    });
+  });
+
+  it("uses current pricing so changing pricing changes read-time cost", async () => {
+    const t = initConvexTest();
+    await seedModelPricing(t);
+    await seedReadQueryFixtures(t);
+
+    await expect(
+      t.query(api.summary.getSummary, {
+        start: hourStart,
+        end: hourStart + 3 * HOUR_MS,
+        bucket: "hour",
+        identifier: "assistant",
+      }),
+    ).resolves.toMatchObject({
+      totalCostMicrosUsd: 12,
+    });
+
+    await t.mutation(api.pricing.upsertModelPricing, {
+      provider: "openai",
+      model: "shared-model",
+      inputCostMicrosPer1M: 200_000,
+      outputCostMicrosPer1M: 400_000,
+      cachedInputCostMicrosPer1M: 100_000,
+    });
+
+    await expect(
+      t.query(api.summary.getSummary, {
+        start: hourStart,
+        end: hourStart + 3 * HOUR_MS,
+        bucket: "hour",
+        identifier: "assistant",
+      }),
+    ).resolves.toMatchObject({
+      totalCostMicrosUsd: 14,
+    });
   });
 
   it("rejects invalid read ranges", async () => {

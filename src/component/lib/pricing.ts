@@ -13,6 +13,12 @@ export type NormalizedModelPricingKey = ModelPricingKeyInput;
 
 export type NormalizedModelPricing = ModelPricingInput;
 
+export type AggregateCostInput = {
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens: number;
+};
+
 export function normalizeModelPricingKey(
   value: ModelPricingKeyInput,
 ): NormalizedModelPricingKey {
@@ -49,6 +55,32 @@ export function normalizeModelPricing(
     outputCostMicrosPer1M: value.outputCostMicrosPer1M,
     cachedInputCostMicrosPer1M: value.cachedInputCostMicrosPer1M,
   };
+}
+
+export function deriveAggregateCostMicrosUsd(
+  aggregate: AggregateCostInput,
+  pricing: NormalizedModelPricing | null,
+) {
+  if (pricing === null) {
+    return 0;
+  }
+
+  const cachedTokens = aggregate.cachedInputTokens;
+  const billableInputTokens = Math.max(aggregate.inputTokens - cachedTokens, 0);
+  const outputTokens = aggregate.outputTokens;
+
+  const inputCostMicros =
+    (billableInputTokens * pricing.inputCostMicrosPer1M) / 1_000_000;
+  const cachedInputCostMicros =
+    pricing.cachedInputCostMicrosPer1M === undefined
+      ? 0
+      : (cachedTokens * pricing.cachedInputCostMicrosPer1M) / 1_000_000;
+  const outputCostMicros =
+    (outputTokens * pricing.outputCostMicrosPer1M) / 1_000_000;
+
+  return Math.round(
+    inputCostMicros + cachedInputCostMicros + outputCostMicros,
+  );
 }
 
 function normalizeRequiredString(value: string, field: string) {

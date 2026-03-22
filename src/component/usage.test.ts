@@ -78,9 +78,9 @@ describe("recordUsage", () => {
         cachedInputTokens: 1,
         totalLatencyMs: 42.5,
         latencySampleCount: 1,
-        totalCostMicrosUsd: 99,
       }),
     ]);
+    expect(hourly[0]).not.toHaveProperty("totalCostMicrosUsd");
     expect(daily).toEqual([
       expect.objectContaining({
         bucketStart: getDayBucketStart(baseArgs.timestamp),
@@ -187,8 +187,8 @@ describe("recordUsage", () => {
       cachedInputTokens: 0,
       totalLatencyMs: 0,
       latencySampleCount: 0,
-      totalCostMicrosUsd: 0,
     });
+    expect(hourly[0]).not.toHaveProperty("totalCostMicrosUsd");
   });
 
   it("preserves explicit totalTokens instead of recomputing it", async () => {

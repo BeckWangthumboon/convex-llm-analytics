@@ -9,6 +9,10 @@ import {
   isBucketAligned,
   type AggregateBucket,
 } from "./lib/buckets.js";
+import {
+  deriveAggregateCostMicrosUsd,
+  type NormalizedModelPricing,
+} from "./lib/pricing.js";
 
 const bucketValidator = v.union(v.literal("hour"), v.literal("day"));
 
@@ -71,9 +75,10 @@ export const getSummary = query({
   handler: async (ctx, args) => {
     const normalized = normalizeRangeArgs(args);
     const totals = createAccumulator();
+    const pricingCache = createPricingCache();
 
-    await forEachAggregateRow(ctx, normalized, (row) => {
-      accumulate(totals, row);
+    await forEachAggregateRow(ctx, normalized, async (row) => {
+      await accumulateWithDerivedCost(ctx, pricingCache, totals, row);
     });
 
     return toPublicMetrics(totals);
@@ -91,6 +96,7 @@ export const getTimeseries = query({
     const normalized = normalizeRangeArgs(args);
     const bucketSizeMs = getBucketSizeMs(normalized.bucket);
     const buckets = new Map<number, MetricsAccumulator>();
+    const pricingCache = createPricingCache();
 
     for (
       let bucketStart = normalized.start;
@@ -100,10 +106,10 @@ export const getTimeseries = query({
       buckets.set(bucketStart, createAccumulator());
     }
 
-    await forEachAggregateRow(ctx, normalized, (row) => {
+    await forEachAggregateRow(ctx, normalized, async (row) => {
       const bucket = buckets.get(row.bucketStart);
       if (bucket !== undefined) {
-        accumulate(bucket, row);
+        await accumulateWithDerivedCost(ctx, pricingCache, bucket, row);
       }
     });
 
@@ -125,19 +131,22 @@ export const getTopModels = query({
   handler: async (ctx, args) => {
     const normalized = normalizeRangeArgs(args);
     const models = new Map<string, TopModelAccumulator>();
+    const pricingCache = createPricingCache();
 
-    await forEachAggregateRow(ctx, normalized, (row) => {
+    await forEachAggregateRow(ctx, normalized, async (row) => {
       const key = `${row.provider}\u0000${row.model}`;
       const existing = models.get(key);
       if (existing === undefined) {
+        const totals = createAccumulator();
+        await accumulateWithDerivedCost(ctx, pricingCache, totals, row);
         models.set(key, {
           provider: row.provider,
           model: row.model,
-          totals: accumulate(createAccumulator(), row),
+          totals,
         });
         return;
       }
-      accumulate(existing.totals, row);
+      await accumulateWithDerivedCost(ctx, pricingCache, existing.totals, row);
     });
 
     return Array.from(models.values())
@@ -329,7 +338,18 @@ function accumulate(accumulator: MetricsAccumulator, row: AggregateRow) {
   accumulator.cachedInputTokens += row.cachedInputTokens;
   accumulator.totalLatencyMs += row.totalLatencyMs;
   accumulator.latencySampleCount += row.latencySampleCount;
-  accumulator.totalCostMicrosUsd += row.totalCostMicrosUsd;
+  return accumulator;
+}
+
+async function accumulateWithDerivedCost(
+  ctx: QueryCtx,
+  pricingCache: Map<string, NormalizedModelPricing | null>,
+  accumulator: MetricsAccumulator,
+  row: AggregateRow,
+) {
+  accumulate(accumulator, row);
+  const pricing = await getCachedModelPricing(ctx, pricingCache, row);
+  accumulator.totalCostMicrosUsd += deriveAggregateCostMicrosUsd(row, pricing);
   return accumulator;
 }
 
@@ -360,4 +380,40 @@ function validateRequiredString(value: string, field: string) {
   if (value.trim().length === 0) {
     throw new Error(`${field} must be a non-empty string`);
   }
+}
+
+function createPricingCache() {
+  return new Map<string, NormalizedModelPricing | null>();
+}
+
+async function getCachedModelPricing(
+  ctx: QueryCtx,
+  pricingCache: Map<string, NormalizedModelPricing | null>,
+  row: Pick<AggregateRow, "provider" | "model">,
+) {
+  const key = `${row.provider}\u0000${row.model}`;
+  const cached = pricingCache.get(key);
+  if (cached !== undefined || pricingCache.has(key)) {
+    return cached ?? null;
+  }
+
+  const pricing = await ctx.db
+    .query("model_pricing")
+    .withIndex("by_provider_model", (q) =>
+      q.eq("provider", row.provider).eq("model", row.model),
+    )
+    .unique();
+
+  const normalized =
+    pricing === null
+      ? null
+      : {
+          provider: pricing.provider,
+          model: pricing.model,
+          inputCostMicrosPer1M: pricing.inputCostMicrosPer1M,
+          outputCostMicrosPer1M: pricing.outputCostMicrosPer1M,
+          cachedInputCostMicrosPer1M: pricing.cachedInputCostMicrosPer1M,
+        };
+  pricingCache.set(key, normalized);
+  return normalized;
 }

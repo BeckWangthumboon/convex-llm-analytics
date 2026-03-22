@@ -130,7 +130,6 @@ describe("toAggregateIncrement", () => {
       cachedInputTokens: 0,
       totalLatencyMs: 0,
       latencySampleCount: 0,
-      totalCostMicrosUsd: 0,
     });
   });
 
@@ -159,7 +158,6 @@ describe("toAggregateIncrement", () => {
       cachedInputTokens: 1,
       totalLatencyMs: 42.5,
       latencySampleCount: 1,
-      totalCostMicrosUsd: 123,
     });
   });
 });

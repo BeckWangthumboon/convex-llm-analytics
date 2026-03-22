@@ -151,7 +151,5 @@ async function patchAggregate(
     totalLatencyMs: existing.totalLatencyMs + increment.totalLatencyMs,
     latencySampleCount:
       existing.latencySampleCount + increment.latencySampleCount,
-    totalCostMicrosUsd:
-      existing.totalCostMicrosUsd + increment.totalCostMicrosUsd,
   });
 }
