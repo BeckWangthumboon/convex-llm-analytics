@@ -24,6 +24,7 @@ Before implementing, do not assume; fetch the latest documentation:
 ### What Are Convex Components?
 
 Convex components are self-contained packages that include:
+
 - Database tables (isolated from the main app)
 - Functions (queries, mutations, actions)
 - TypeScript types and validators
@@ -72,7 +73,7 @@ export default defineSchema({
     data: v.any(),
     createdAt: v.number(),
   }).index("by_name", ["name"]),
-  
+
   config: defineTable({
     key: v.string(),
     value: v.any(),
@@ -111,12 +112,14 @@ export const list = query({
   args: {
     limit: v.optional(v.number()),
   },
-  returns: v.array(v.object({
-    _id: v.id("items"),
-    name: v.string(),
-    data: v.any(),
-    createdAt: v.number(),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("items"),
+      name: v.string(),
+      data: v.any(),
+      createdAt: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("items")
@@ -127,11 +130,14 @@ export const list = query({
 
 export const get = query({
   args: { name: v.string() },
-  returns: v.union(v.object({
-    _id: v.id("items"),
-    name: v.string(),
-    data: v.any(),
-  }), v.null()),
+  returns: v.union(
+    v.object({
+      _id: v.id("items"),
+      name: v.string(),
+      data: v.any(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("items")
@@ -218,7 +224,7 @@ function MyApp() {
   // Access component functions through the app's API
   const items = useQuery(api.myComponent.list, { limit: 10 });
   const createItem = useMutation(api.myComponent.create);
-  
+
   return (
     <div>
       {items?.map((item) => (
@@ -268,7 +274,7 @@ export function useMyComponent(api: {
 }) {
   const items = useQuery(api.list, {});
   const createItem = useMutation(api.create);
-  
+
   return {
     items,
     createItem,
@@ -288,10 +294,7 @@ export function useMyComponent(api: {
   "description": "A reusable Convex component",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "convex.config.ts"
-  ],
+  "files": ["dist", "convex.config.ts"],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build"
@@ -303,10 +306,7 @@ export function useMyComponent(api: {
     "convex": "^1.17.0",
     "typescript": "^5.0.0"
   },
-  "keywords": [
-    "convex",
-    "component"
-  ]
+  "keywords": ["convex", "component"]
 }
 ```
 
@@ -367,40 +367,40 @@ export const checkLimit = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const windowStart = now - args.windowMs;
-    
+
     // Clean old entries
     const oldEntries = await ctx.db
       .query("requests")
-      .withIndex("by_key_and_time", (q) => 
-        q.eq("key", args.key).lt("timestamp", windowStart)
+      .withIndex("by_key_and_time", (q) =>
+        q.eq("key", args.key).lt("timestamp", windowStart),
       )
       .collect();
-    
+
     for (const entry of oldEntries) {
       await ctx.db.delete(entry._id);
     }
-    
+
     // Count current window
     const currentRequests = await ctx.db
       .query("requests")
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .collect();
-    
+
     const remaining = Math.max(0, args.limit - currentRequests.length);
     const allowed = remaining > 0;
-    
+
     if (allowed) {
       await ctx.db.insert("requests", {
         key: args.key,
         timestamp: now,
       });
     }
-    
+
     const oldestRequest = currentRequests[0];
-    const resetAt = oldestRequest 
-      ? oldestRequest.timestamp + args.windowMs 
+    const resetAt = oldestRequest
+      ? oldestRequest.timestamp + args.windowMs
       : now + args.windowMs;
-    
+
     return { allowed, remaining: remaining - (allowed ? 1 : 0), resetAt };
   },
 });
@@ -413,18 +413,18 @@ import { api } from "../convex/_generated/api";
 
 function useRateLimitedAction() {
   const checkLimit = useMutation(api.rateLimiter.checkLimit);
-  
+
   return async (action: () => Promise<void>) => {
     const result = await checkLimit({
       key: "user-action",
       limit: 10,
       windowMs: 60000,
     });
-    
+
     if (!result.allowed) {
       throw new Error(`Rate limited. Try again at ${new Date(result.resetAt)}`);
     }
-    
+
     await action();
   };
 }

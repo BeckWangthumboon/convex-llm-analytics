@@ -22,15 +22,24 @@ Removed from the stock template:
 ## Build
 
 ```sh
-npm install
-npm run build
+bun install
+bun run build
+```
+
+## Development
+
+```sh
+bun install
+bun run generate
+bun run check
+bun run build
 ```
 
 When you are ready to regenerate Convex types, first connect this repo to a
 Convex deployment and then run:
 
 ```sh
-npm run codegen
+bun run generate
 ```
 
 ## Install In An App

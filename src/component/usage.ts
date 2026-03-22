@@ -90,9 +90,7 @@ export const recordUsage = mutation({
   },
 });
 
-type AggregateTableName =
-  | "usage_aggregates_hourly"
-  | "usage_aggregates_daily";
+type AggregateTableName = "usage_aggregates_hourly" | "usage_aggregates_daily";
 
 type UpsertAggregateArgs = {
   bucketStart: number;

@@ -78,9 +78,7 @@ export function deriveAggregateCostMicrosUsd(
   const outputCostMicros =
     (outputTokens * pricing.outputCostMicrosPer1M) / 1_000_000;
 
-  return Math.round(
-    inputCostMicros + cachedInputCostMicros + outputCostMicros,
-  );
+  return Math.round(inputCostMicros + cachedInputCostMicros + outputCostMicros);
 }
 
 function normalizeRequiredString(value: string, field: string) {

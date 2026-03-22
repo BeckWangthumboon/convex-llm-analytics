@@ -5,7 +5,6 @@ import { query, type QueryCtx } from "./_generated/server.js";
 import {
   DAY_MS,
   getBucketSizeMs,
-  HOUR_MS,
   isBucketAligned,
   type AggregateBucket,
 } from "./lib/buckets.js";
@@ -177,11 +176,11 @@ type RangeArgs = {
   model?: string;
 };
 
-type AggregateTableName =
-  | "usage_aggregates_hourly"
-  | "usage_aggregates_daily";
+type AggregateTableName = "usage_aggregates_hourly" | "usage_aggregates_daily";
 
-type AggregateRow = Doc<"usage_aggregates_hourly"> | Doc<"usage_aggregates_daily">;
+type AggregateRow =
+  | Doc<"usage_aggregates_hourly">
+  | Doc<"usage_aggregates_daily">;
 
 type MetricsAccumulator = {
   requests: number;
@@ -279,7 +278,10 @@ async function forEachAggregateRow(
     const rows = ctx.db
       .query(table)
       .withIndex("by_model_bucket", (q) =>
-        q.eq("model", args.model!).gte("bucketStart", args.start).lt("bucketStart", args.end),
+        q
+          .eq("model", args.model!)
+          .gte("bucketStart", args.start)
+          .lt("bucketStart", args.end),
       );
 
     for await (const row of rows) {

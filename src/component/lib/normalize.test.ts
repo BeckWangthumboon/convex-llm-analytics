@@ -64,7 +64,9 @@ describe("normalizeUsageEvent", () => {
     ["model", { ...baseEvent, model: "   " }],
     ["providerResponseId", { ...baseEvent, providerResponseId: "   " }],
   ] as const)("rejects blank %s values", (_field, event) => {
-    expect(() => normalizeUsageEvent(event)).toThrow("must be a non-empty string");
+    expect(() => normalizeUsageEvent(event)).toThrow(
+      "must be a non-empty string",
+    );
   });
 
   it.each([
